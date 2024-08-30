@@ -4,20 +4,44 @@ import useMessageStore from "./useMessageStore";
 const useTaskStore = create((set) => ({
   tasks: [],
   addTask: (task) => {
-    set((state) => ({ tasks: [...state.tasks, task] }));
+    try {
+      if (!task.title.trim()) {
+        throw new Error("Task name cannot be empty");
+      }
+      set((state) => ({ tasks: [...state.tasks, task] }));
+      useMessageStore
+        .getState()
+        .setMessage("Task added successfully", "success");
+    } catch (error) {
+      useMessageStore.getState().setMessage(error.message, "error");
+    }
   },
   removeTask: (id) => {
-    set((state) => ({ tasks: state.tasks.filter((task) => task.id !== id) }));
+    try {
+      set((state) => ({ tasks: state.tasks.filter((task) => task.id !== id) }));
+      useMessageStore
+        .getState()
+        .setMessage("Task removed successfully", "success");
+    } catch (error) {
+      useMessageStore.getState().setMessage("Error removing task", "error");
+    }
   },
   toggleTask: (id) => {
-    set((state) => {
-      const updatedTasks = state.tasks.map((task) =>
-        task.id === id ? { ...task, completed: !task.completed } : task
-      );
-      // Sort tasks: incomplete tasks first, completed tasks last
-      updatedTasks.sort((a, b) => a.completed - b.completed);
-      return { tasks: updatedTasks };
-    });
+    try {
+      set((state) => {
+        const updatedTasks = state.tasks.map((task) =>
+          task.id === id ? { ...task, completed: !task.completed } : task
+        );
+        // Sort tasks: incomplete tasks first, completed tasks last
+        updatedTasks.sort((a, b) => a.completed - b.completed);
+        return { tasks: updatedTasks };
+      });
+      useMessageStore
+        .getState()
+        .setMessage("Task toggled successfully", "success");
+    } catch (error) {
+      useMessageStore.getState().setMessage("Error toggling task", "error");
+    }
   },
   fetchTasks: async () => {
     try {

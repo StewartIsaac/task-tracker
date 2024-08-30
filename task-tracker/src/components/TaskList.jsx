@@ -1,11 +1,19 @@
 import useTaskStore from '../store/useTaskStore';
+import useMessageStore from '../store/useMessageStore';
 
 const TaskList = () => {
     const { tasks, removeTask, toggleTask } = useTaskStore();
+    const { message, messageType, clearMessage } = useMessageStore();
 
     return (
         <div>
             <h2 className="text-lg font-semibold mb-4 text-gray-700">Task List</h2>
+            {message && (
+                <div className={`mb-4 p-2 rounded ${messageType === 'error' ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}`}>
+                    {message}
+                    <button onClick={clearMessage} className="ml-4 text-sm text-gray-500">x</button>
+                </div>
+            )}
             <ul className="list-none p-0">
                 {tasks.map(task => (
                     <li key={task.id} className={`flex items-center mb-2 p-2 rounded-md bg-gray-100`}>
