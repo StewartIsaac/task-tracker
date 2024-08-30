@@ -1,14 +1,29 @@
 import { create } from "zustand";
 import useMessageStore from "./useMessageStore";
 
+// Helper function to load tasks from local storage
+const loadTasksFromLocalStorage = () => {
+  const tasks = localStorage.getItem("tasks");
+  return tasks ? JSON.parse(tasks) : [];
+};
+
+// Helper function to save tasks to local storage
+const saveTasksToLocalStorage = (tasks) => {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+};
+
 const useTaskStore = create((set) => ({
-  tasks: [],
+  tasks: loadTasksFromLocalStorage(),
   addTask: (task) => {
     try {
       if (!task.title.trim()) {
         throw new Error("Task name cannot be empty");
       }
-      set((state) => ({ tasks: [...state.tasks, task] }));
+      set((state) => {
+        const updatedTasks = [...state.tasks, task];
+        saveTasksToLocalStorage(updatedTasks);
+        return { tasks: updatedTasks };
+      });
       useMessageStore
         .getState()
         .setMessage("Task added successfully", "success");
@@ -18,7 +33,11 @@ const useTaskStore = create((set) => ({
   },
   removeTask: (id) => {
     try {
-      set((state) => ({ tasks: state.tasks.filter((task) => task.id !== id) }));
+      set((state) => {
+        const updatedTasks = state.tasks.filter((task) => task.id !== id);
+        saveTasksToLocalStorage(updatedTasks);
+        return { tasks: updatedTasks };
+      });
       useMessageStore
         .getState()
         .setMessage("Task removed successfully", "success");
@@ -34,6 +53,7 @@ const useTaskStore = create((set) => ({
         );
         // Sort tasks: incomplete tasks first, completed tasks last
         updatedTasks.sort((a, b) => a.completed - b.completed);
+        saveTasksToLocalStorage(updatedTasks);
         return { tasks: updatedTasks };
       });
       useMessageStore
@@ -49,7 +69,9 @@ const useTaskStore = create((set) => ({
         "https://jsonplaceholder.typicode.com/todos"
       );
       const data = await response.json();
-      set({ tasks: data.slice(0, 5) });
+      const tasks = data.slice(0, 5);
+      set({ tasks });
+      saveTasksToLocalStorage(tasks);
       useMessageStore
         .getState()
         .setMessage("Tasks fetched successfully", "success");
